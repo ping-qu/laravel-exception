@@ -86,20 +86,23 @@ class ExceptionHandler
         }else{
             $statusCode = $exception->getCode() == 0 ? 500:$exception->getCode();
             header(self::$httpVersion. " ". $statusCode ." " . self::getHttpStatusMessage($statusCode));
-            echo json_encode([
+            $response = array(
                 'data'=>[],
-                'debug'=>array(
-                    'file'=>$exception->getFile(),
-                    'line'=>$exception->getLine(),
-                    'trace'=>$exception->getTrace(),
-                    'type'=>get_class($exception)
-                ),
                 'http_code'=>$statusCode,
                 'error_msg'=>$exception->getMessage(),
                 'error_code'=>method_exists($exception,'getErrorId')?$exception->getErrorId():'SEVER_ERROR',
                 'list'=>[],
                 'status'=>false
-            ]);die();
+            );
+            if (env('APP_DEBUG')){
+                $response = array_merge($response,array('debug'=>array(
+                    'file'=>$exception->getFile(),
+                    'line'=>$exception->getLine(),
+                    'trace'=>$exception->getTrace(),
+                    'type'=>get_class($exception)
+                )));
+            }
+            echo json_encode($response);die();
         }
 
 
