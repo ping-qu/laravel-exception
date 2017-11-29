@@ -54,57 +54,34 @@ class ExceptionHandler
             503 => 'Service Unavailable',
             504 => 'Gateway Timeout',
             505 => 'HTTP Version Not Supported');
-        return isset($httpStatus[$statusCode])?$httpStatus[$statusCode]:$httpStatus[400];
+        return isset($httpStatus[$statusCode])?$httpStatus[$statusCode]:$httpStatus[500];
 
     }
 
     public static function exception_handler(\Exception $exception){
         header("Content-Type:". self::$contentType);
-        if ($exception instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException){
-            $statusCode = 404;
-            header(self::$httpVersion. " ". $statusCode ." " . self::getHttpStatusMessage($statusCode));
-            echo json_encode([
-                'data'=>[],
-                'http_code'=>$statusCode,
-                'error_msg'=>'api not found',
-                'error_code'=>'NOT_FOUND',
-                'list'=>[],
-                'status'=>false
-            ]);die();
-        }elseif($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
-            $statusCode = 405;
-            header(self::$httpVersion. " ". $statusCode ." " . self::getHttpStatusMessage($statusCode));
-            echo json_encode([
-                'data'=>[],
-                'http_code' => $statusCode,
-                'error_msg' => 'Method Not Allowed',
-                'error_code'=>'',
-                'list'=>[],
-                'status'=>false
-            ]);
-            die();
-        }else{
-            $statusCode = $exception->getCode() == 0 ? 500:$exception->getCode();
-            header(self::$httpVersion. " ". $statusCode ." " . self::getHttpStatusMessage($statusCode));
-            $response = array(
-                'data'=>[],
-                'http_code'=>$statusCode,
-                'error_msg'=>$exception->getMessage(),
-                'error_code'=>method_exists($exception,'getErrorId')?$exception->getErrorId():'SEVER_ERROR',
-                'list'=>[],
-                'status'=>false
-            );
-            if (env('APP_DEBUG')){
-                $response = array_merge($response,array('debug'=>array(
-                    'file'=>$exception->getFile(),
-                    'line'=>$exception->getLine(),
-                    'trace'=>$exception->getTrace(),
-                    'type'=>get_class($exception)
-                )));
-            }
-            echo json_encode($response);die();
+        $statusCode = method_exists($exception,'getStatusCode')?$exception->getStatusCode():$exception->getCode();
+        header(self::$httpVersion. " ". $statusCode ." " . self::getHttpStatusMessage($statusCode));
+        $response = array(
+            'data'=>[],
+            'http_code'=>$statusCode == 0?500:$statusCode,
+            'error_msg'=>$exception->getMessage(),
+            'error_code'=>method_exists($exception,'getErrorId')?$exception->getErrorId():self::getHttpStatusMessage($statusCode),
+            'list'=>[],
+            'status'=>false
+        );
+        if (env('APP_DEBUG')){
+            $response = array_merge($response,array('debug'=>array(
+                'file'=>$exception->getFile(),
+                'line'=>$exception->getLine(),
+                'trace'=>$exception->getTrace(),
+                'type'=>get_class($exception)
+            )));
         }
-
+        echo json_encode($response);die();
 
     }
+
+
+
 }
