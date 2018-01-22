@@ -58,7 +58,16 @@ class ExceptionHandler
 
     }
 
-    public static function exception_handler(\Exception $exception){
+    public static function handler(\Exception $exception){
+        if (PHP_SAPI == 'cli'){
+            parent::report($exception);
+        }else{
+            self::response($exception);
+        }
+
+    }
+
+    public static function response(\Exception $exception){
         header("Content-Type:". self::$contentType);
         $statusCode = method_exists($exception,'getStatusCode')?$exception->getStatusCode():$exception->getCode();
         header(self::$httpVersion. " ". ($statusCode = $statusCode == 0? 500 : $statusCode) ." " . self::getHttpStatusMessage($statusCode));
