@@ -3,14 +3,12 @@ namespace Pingqu;
 /**
  *
  */
-class ExceptionHandler
+class ExceptionHandler extends \Illuminate\Foundation\Exceptions\Handler
 {
 
     static $httpVersion = "HTTP/1.1";
     static $contentType = 'application/json';
-    public function __construct()
-    {
-    }
+
     public static function getHttpStatusMessage($statusCode){
         $httpStatus = array(
             100 => 'Continue',
@@ -83,7 +81,7 @@ class ExceptionHandler
             $response = array_merge($response,array('debug'=>array(
                 'file'=>$exception->getFile(),
                 'line'=>$exception->getLine(),
-                'trace'=>$exception->getTrace(),
+                //'trace'=>$exception->getTrace(),
                 'type'=>get_class($exception)
             )));
         }
